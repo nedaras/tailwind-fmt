@@ -1,4 +1,5 @@
 // from https://github.com/tailwindlabs/prettier-plugin-tailwindcss/blob/main/src/config.ts
+const escalade = require('escalade/sync')
 const clearModule = require('clear-module')
 const postcss = require('postcss')
 const postcssImport = require('postcss-import')
@@ -53,9 +54,6 @@ async function loadTailwindConfig(
     tailwindConfig = loadedConfig.default ?? loadedConfig
   }
 
-  // suppress "empty content" warning
-  tailwindConfig.content = ['no-op']
-
   // Create the context
   let context = createContext(resolveConfig(tailwindConfig))
 
@@ -105,35 +103,40 @@ async function loadV4(
   }
 }
 
-//function getConfigPath(options: ParserOptions, baseDir: string): string | null {
-  //if (options.tailwindConfig) {
-    //return path.resolve(baseDir, options.tailwindConfig)
-  //}
+/**
+ * @param {any} options 
+ * @param {string} baseDir 
+ * @returns {?string}
+ */
+function getConfigPath(options, baseDir) {
+  if (options.tailwindConfig) {
+    return path.resolve(baseDir, options.tailwindConfig)
+  }
 
-  //let configPath: string | void = undefined
-  //try {
-    //configPath = escalade(baseDir, (_dir, names) => {
-      //if (names.includes('tailwind.config.js')) {
-        //return 'tailwind.config.js'
-      //}
-      //if (names.includes('tailwind.config.cjs')) {
-        //return 'tailwind.config.cjs'
-      //}
-      //if (names.includes('tailwind.config.mjs')) {
-        //return 'tailwind.config.mjs'
-      //}
-      //if (names.includes('tailwind.config.ts')) {
-        //return 'tailwind.config.ts'
-      //}
-    //})
-  //} catch {}
+  let configPath = undefined
+  try {
+    configPath = escalade(baseDir, (_dir, names) => {
+      if (names.includes('tailwind.config.js')) {
+        return 'tailwind.config.js'
+      }
+      if (names.includes('tailwind.config.cjs')) {
+        return 'tailwind.config.cjs'
+      }
+      if (names.includes('tailwind.config.mjs')) {
+        return 'tailwind.config.mjs'
+      }
+      if (names.includes('tailwind.config.ts')) {
+        return 'tailwind.config.ts'
+      }
+    })
+  } catch {}
 
-  //if (configPath) {
-    //return configPath
-  //}
+  if (configPath) {
+    return configPath
+  }
 
-  //return null
-//}
+  return null
+}
 
 //function getEntryPoint(options: ParserOptions, baseDir: string): string | null {
   //if (options.tailwindEntryPoint) {
@@ -144,5 +147,6 @@ async function loadV4(
 //}
 //
 module.exports = {
-  loadTailwindConfig
+  loadTailwindConfig,
+  getConfigPath,
 }

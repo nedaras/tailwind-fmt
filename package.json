@@ -1,6 +1,12 @@
 {
-  "dependencies": {
+  "name": "tailwind-fmt",
+  "description": "A formatter for sorting Tailwind CSS classes.",
+  "license": "MIT",
+  "main": "src/cli.js",
+  "devDependencies": {
     "clear-module": "^4.1.2",
+    "escalade": "^3.1.2",
+    "glob": "^11.0.0",
     "tailwindcss": "^3.4.10"
   }
 }
