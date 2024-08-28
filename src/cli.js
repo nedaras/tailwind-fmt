@@ -7,27 +7,57 @@ const { loadTailwindConfig, getConfigPath } = require('./tailwind/config.js');
 const { readUntilDelimiter, EOFError } = require('./reader.js');
 
 let context
-(async () => {
-  const configPath = getConfigPath({}, process.cwd())
-  context = (await loadTailwindConfig(process.cwd(), configPath, null)).context
+async function main() {
+  if (process.argv[2]) {
+    processArgs(process.argv.slice(2))
+    return
+  }
 
-  const [ files, tmp ] = await Promise.all([
-    glob(context.tailwindConfig.content.files, { ignore: 'node_modules/**' }),
-    require('fs/promises').mkdtemp("tmp"), // this can err that already is an dir
-  ])
-
+  let tmp = undefined
   try {
-    const promises = files.map(async file => {
-      return fmtFile(`./${file}`, `./${tmp}/${file}`).then(() => {
-        console.log(file)
-      })
-    })
+    const configPath = getConfigPath({}, process.cwd())
+    context = (await loadTailwindConfig(process.cwd(), configPath, null)).context
+
+    const [ files, _tmp ] = await Promise.all([
+      glob(context.tailwindConfig.content.files, { ignore: 'node_modules/**' }),
+      require('fs/promises').mkdtemp("tmp"), // this can err that already is an dir
+    ])
+
+    tmp = _tmp
+
+    const promises = files.map(async file => fmtFile(file, `${tmp}/${file}`).then((changed) => {
+      changed && console.log(file)
+    }))
+
     await Promise.all(promises)
   } finally {
     // remove on process exit
-    fs.rmdirSync(tmp)
+    tmp && fs.rmdirSync(tmp)
   }
-})();
+}
+
+
+/**
+ * @param {string[]} args 
+ */
+function processArgs(args) {
+  const { name, version }= require('../package.json')
+  if (args[0] == '-v' || args[0] == '--version') {
+    console.log(version)
+    return
+  }
+
+  console.log("")
+
+  console.log(`${name} v${version}`)
+  console.log('\nUsage:')
+  console.log(`   ${name}`)
+  console.log('\nOptions:')
+  console.log('   -v, --version    Print version number and exit')
+  console.log('   -h, --help       Print usage information and exit') // its just an illusion
+
+  console.log("")
+}
 
 process.on('SIGINT', () => {
   // for now we will just not exit
@@ -36,16 +66,19 @@ process.on('SIGINT', () => {
 /**
  * @param {string} input 
  * @param {string} output 
- * @returns {Promise<void>}
+ * @returns {Promise<boolean>}
  */
 async function fmtFile(input, output) { // add like a check if we even needed to fmt mb tailwind has some kind of cache for changed files
+  output = output.replace(/[/\\]/g, '#')
 
   const reader = fs.createReadStream(input, { encoding: 'utf8' })
   const writer = fs.createWriteStream(output, { encoding: 'utf8' })
 
   return new Promise((resolve, reject) => {
-    let quote = false;
-    readUntilDelimiter(reader, '"', (err, block) => {
+    let changed = false
+    let quote = false
+
+    readUntilDelimiter(reader, '"', (err, block) => { // todo: we should check for " or ' or idk `
       // js err handling is bad
       switch (true) {
         case (err == null):
@@ -60,7 +93,11 @@ async function fmtFile(input, output) { // add like a check if we even needed to
             reject(err)
           }
 
-          fs.rename(output, input, err => err ? reject(err) : resolve())
+          if (changed) {
+            fs.rename(output, input, err => err ? reject(err) : resolve(changed))
+          } else {
+            fs.unlink(output, err => err ? reject(err) : resolve(changed))
+          }
 
           return
         default:
@@ -72,6 +109,10 @@ async function fmtFile(input, output) { // add like a check if we even needed to
 
         const classes = block.split(' ').filter(v => v !== '')
         const ordered = order(context.getClassOrder(classes))
+
+        !changed && classes.forEach((v, i) => {
+          v != ordered[i] && (changed = true)
+        })
 
         writer.write(ordered.join(' ') + '"')
 
@@ -136,7 +177,12 @@ function getArguments() {
     if (process.argv[i] == '-o' && len > i + 1) {
       args.output = process.argv[++i]
     }
+
+    if (process.argv[i] == '-v' || process.argv[i] == '-version') {
+    }
   }
 
   return args;
 }
+
+main()
