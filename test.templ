@@ -1,0 +1,93 @@
+package components
+
+import "nedas/shop/pkg/models"
+
+templ AddressForm(address models.Address, err string) {
+	<form
+		class="bg-gray-200"
+		hx-put={ string(templ.URL("/htmx/address/" + address.AddressId)) }
+		hx-swap="outerHTML"
+	>
+		<ul class="flex flex-col gap-4">
+			<li class="bg-white p-4 flex flex-col gap-4">
+				<h2 class="font-semibold">Country/region</h2>
+				@Select(address.Country == "") {
+					<option value="" selected?={ "" == address.CountryCode } disabled hidden>Country*</option>
+					<option value="AL" selected?={ "AL" == address.CountryCode }>Albania</option>
+					<option value="BA" selected?={ "BA" == address.CountryCode }>Bosnia and Herzegovina</option>
+					<option value="EE" selected?={ "EE" == address.CountryCode }>Estonia</option>
+					<option value="XK" selected?={ "XK" == address.CountryCode }>Kosovo</option>
+					<option value="LV" selected?={ "LV" == address.CountryCode }>Latvia</option>
+					<option value="LI" selected?={ "LI" == address.CountryCode }>Liechtenstein</option>
+					<option value="LT" selected?={ "LT" == address.CountryCode }>Lithuania</option>
+					<option value="MD" selected?={ "MD" == address.CountryCode }>Maldova</option>
+					<option value="ME" selected?={ "ME" == address.CountryCode }>Montenegro</option>
+					<option value="MK" selected?={ "MK" == address.CountryCode }>North Macedonia</option>
+					<option value="RS" selected?={ "RS" == address.CountryCode }>Serbia</option>
+				}
+			</li>
+			<li class="bg-white p-4 flex flex-col gap-4">
+				<h2 class="font-semibold">Contact information</h2>
+				<input name="contact" class="border border-gray-400 rounded outline-none placeholder-gray-400 p-2" maxlength="64" value={ address.Contact } required type="text" placeholder="Contact name*"/>
+				<input name="phone" class="w-full border border-gray-400 rounded outline-none placeholder-gray-400 p-2" value={ address.Phone } required type="text" pattern="^\+?(\d\s*){7,14}$" title="Use valid number" placeholder="Mobile number*"/>
+			</li>
+			<li class="bg-white p-4 flex flex-col gap-4">
+				<h2 class="font-semibold">Address</h2>
+				if err != "" {
+					<p class="text-sm text-red-500">{ err }</p>
+				}
+				<input name="street" class="border border-gray-400 rounded outline-none placeholder-gray-400 p-2" value={ address.Street } required type="text" placeholder="Street, house/apartment/unit*"/>
+				<input name="region" class="border border-gray-400 rounded outline-none placeholder-gray-400 p-2" value={ address.Region } pattern="^[A-Za-zÄÖÜäöüßĄČĘĖĮŠŲŪŽąčęėįšųūž' ]+$" title="Alphabetic characters only" required type="text" placeholder="Province*"/>
+				<input name="city" class="border border-gray-400 rounded outline-none placeholder-gray-400 p-2" value={ address.City } pattern="^[A-Za-zÄÖÜäöüßĄČĘĖĮŠŲŪŽąčęėįšųūž' ]+$" title="Alphabetic characters only" required type="text" placeholder="City*"/>
+				<input name="zipcode" class="border border-gray-400 rounded outline-none placeholder-gray-400 p-2" value={ address.Zipcode } pattern="^([0-9]{4,5})$" title="Zipcode" required placeholder="ZIP code*"/>
+			</li>
+			<li class="bg-white p-4 flex gap-4 justify-between items-center">
+				<label for="address-checkbox" class="cursor-pointer">Set as default shipping address</label>
+				<address-checkbox address={ address.AddressId }></address-checkbox>
+			</li>
+		</ul>
+		<button class="bg-black text-white w-full p-4" type="submit">
+			Save
+		</button>
+	</form>
+}
+
+templ Select(disabled bool) {
+	<div class="relative">
+		<style type="text/css">
+      .display-arrows::before,
+      .display-arrows::after {
+        content: "";
+        position: absolute;
+        width: 0;
+        height: 0;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      .display-arrows::before {
+        border-left: 0.5em solid transparent;
+        border-right: 0.5em solid transparent;
+        border-bottom: 0.5em solid #9ca3af;
+        top: 35%;
+      }
+
+      .display-arrows::after {
+        top: 65%;
+        border-left: 0.5em solid transparent;
+        border-right: 0.5em solid transparent;
+        border-top: 0.5em solid #9ca3af;
+      }
+    </style>
+		<select
+			name="code"
+			id="country_selector"
+			class={ "w-full p-2 pr-12 bg-white appearance-none border border-gray-400 rounded outline-none", templ.KV("text-gray-400", disabled) }
+			required
+		>
+			{ children... }
+		</select>
+		<span class="display-arrows absolute block h-full w-10 top-0 right-0 pointer-events-none a b c d e f"></span>
+	</div>
+}
+
