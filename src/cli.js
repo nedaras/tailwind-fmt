@@ -1,5 +1,8 @@
+#!/usr/bin/env node
+"use strict";
+
 const fs = require('fs')
-const { glob } = require('glob')
+const { glob } = require('glob') // dont like the warning it is throwing on install
 const { loadTailwindConfig, getConfigPath } = require('./tailwind/config.js');
 const { readUntilDelimiter, EOFError } = require('./reader.js');
 
