@@ -5,6 +5,7 @@ const fs = require('fs')
 const { glob } = require('glob') // dont like the warning it is throwing on install
 const { loadTailwindConfig, getConfigPath } = require('./tailwind/config.js');
 const { readUntilDelimiter, EOFError } = require('./reader.js');
+const { delimiter } = require('path');
 
 let context
 async function main() {
@@ -25,7 +26,7 @@ async function main() {
 
     tmp = _tmp
 
-    const promises = files.map(async file => fmtFile(file, `${tmp}/${file}`).then((changed) => {
+    const promises = files.map(async file => fmtFile(file, tmp).then((changed) => {
       changed && console.log(file)
     }))
 
@@ -64,21 +65,21 @@ process.on('SIGINT', () => {
 })
 
 /**
- * @param {string} input 
- * @param {string} output 
+ * @param {string} file 
+ * @param {string} tmp 
  * @returns {Promise<boolean>}
  */
-async function fmtFile(input, output) { // add like a check if we even needed to fmt mb tailwind has some kind of cache for changed files
-  output = output.replace(/[/\\]/g, '#')
+async function fmtFile(file, tmp) { // add like a check if we even needed to fmt mb tailwind has some kind of cache for changed files
+  const output = tmp + "/" + file.replace(/[/\\]/g, '#')
 
-  const reader = fs.createReadStream(input, { encoding: 'utf8' })
+  const reader = fs.createReadStream(file, { encoding: 'utf8' })
   const writer = fs.createWriteStream(output, { encoding: 'utf8' })
 
-  return new Promise((resolve, reject) => {
-    let changed = false
-    let quote = false
+  let queote = false
+  let changed = false
 
-    readUntilDelimiter(reader, '"', (err, block) => { // todo: we should check for " or ' or idk `
+  return new Promise((resolve, reject) => {
+    readUntilDelimiter(reader, [ '"', "'" ], (err, block, delimiter) => { // todo: we should check for " or ' or idk `
       // js err handling is bad
       switch (true) {
         case (err == null):
@@ -94,7 +95,7 @@ async function fmtFile(input, output) { // add like a check if we even needed to
           }
 
           if (changed) {
-            fs.rename(output, input, err => err ? reject(err) : resolve(changed))
+            fs.rename(output, file, err => err ? reject(err) : resolve(changed))
           } else {
             fs.unlink(output, err => err ? reject(err) : resolve(changed))
           }
@@ -104,26 +105,41 @@ async function fmtFile(input, output) { // add like a check if we even needed to
           reject(err)
       }
 
-      if (quote) {
-        quote = !quote;
+      if (queote) { // if its " we need to check if its escaped \" != \\"
+        queote = false
 
-        const classes = block.split(' ').filter(v => v !== '')
+        // we should handle \n things for some crazy peaple but for now i dont care
+        if (block.includes('\n')) {
+          block = block.replaceAll('\n', ' ')
+          changed = true
+        }
+
+        const classes = block.split(' ').filter(v => {
+          if (v !== '') {
+            return true
+          }
+          changed = true
+          return false
+        })
         const ordered = order(context.getClassOrder(classes))
 
         !changed && classes.forEach((v, i) => {
           v != ordered[i] && (changed = true)
         })
 
-        writer.write(ordered.join(' ') + '"')
+        writer.write(ordered.join(' ') + delimiter)
 
-        return
+        return ["'", '"']
       }
 
       if (block.endsWith('class=')) {
-        quote = !quote
+        queote = true
+        writer.write(block + delimiter)
+
+        return [delimiter]
       }
 
-      writer.write(block + '"')
+      writer.write(block + delimiter)
     })
   })
 }
