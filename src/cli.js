@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 "use strict";
 
+// todo: use as less deps as possible
+
 const fs = require('fs')
 const { glob } = require('glob') // dont like the warning it is throwing on install // todo: there is fs glob
 const { loadTailwindConfig, getConfigPath } = require('./tailwind/config.js');
