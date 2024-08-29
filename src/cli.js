@@ -2,7 +2,7 @@
 "use strict";
 
 const fs = require('fs')
-const { glob } = require('glob') // dont like the warning it is throwing on install
+const { glob } = require('glob') // dont like the warning it is throwing on install // todo: there is fs glob
 const { loadTailwindConfig, getConfigPath } = require('./tailwind/config.js');
 const { readUntilDelimiter, EOFError } = require('./reader.js');
 const { delimiter } = require('path');
@@ -79,7 +79,8 @@ async function fmtFile(file, tmp) { // add like a check if we even needed to fmt
   let changed = false
 
   return new Promise((resolve, reject) => {
-    readUntilDelimiter(reader, [ '"', "'" ], (err, block, delimiter) => { // todo: we should check for " or ' or idk `
+    // escaped chars are handled by this function
+    readUntilDelimiter(reader, [ '"', "'" ], (err, block, delimiter) => {
       // js err handling is bad
       switch (true) {
         case (err == null):
@@ -105,10 +106,10 @@ async function fmtFile(file, tmp) { // add like a check if we even needed to fmt
           reject(err)
       }
 
-      if (queote) { // if its " we need to check if its escaped \" != \\"
+      if (queote) {
         queote = false
 
-        // we should handle \n things for some crazy peaple but for now i dont care
+        // todo: mb add some white spaces in future under a flag
         if (block.includes('\n')) {
           block = block.replaceAll('\n', ' ')
           changed = true
@@ -121,6 +122,7 @@ async function fmtFile(file, tmp) { // add like a check if we even needed to fmt
           changed = true
           return false
         })
+
         const ordered = order(context.getClassOrder(classes))
 
         !changed && classes.forEach((v, i) => {
@@ -172,33 +174,8 @@ function order(classOrder) { // do not look at this mess never
   return ordered
 }
 
-/**
- * @typedef {Object} Arguments
- * @property {?string} input
- * @property {?string} output
- */
-
-/**
-  * @return {Arguments}
-  */
-function getArguments() {
-  const args = {}
-  let len = process.argv.length
-
-  for (let i = 0; i < len; i++) {
-    if (process.argv[i] == '-i' && len > i + 1) {
-      args.input = process.argv[++i]
-    }
-
-    if (process.argv[i] == '-o' && len > i + 1) {
-      args.output = process.argv[++i]
-    }
-
-    if (process.argv[i] == '-v' || process.argv[i] == '-version') {
-    }
-  }
-
-  return args;
-}
-
 main()
+
+module.exports = {
+  fmtFile
+}
