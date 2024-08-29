@@ -1,16 +1,19 @@
+<img src="https://cdn.discordapp.com/attachments/1038128472054304848/1278799213123207188/tailwind-fmt.png?ex=66d21e13&is=66d0cc93&hm=812932e38a5d060d90745aebb7b5c1ea3b072ca8251aa5591cafe88e6785b3ae&" alt="tailwindcss-fmt" />
+
 A formatter for Tailwind CSS v3.0+ that automatically sorts classes.
 
-## Instalation
+## Installation
 
-As there is not yet a stable release, the only way to install is by cloning this reposatry and linking it with npm.
+Install `tailwind-fmt` as a dev-dependency:
 
 ```sh
-git clone https://github.com/nedaras/tailwind-fmt.git
+npm install -D tailwind-fmt
 ```
 
-Using `npm link` will link this reposatry to global packages and you will be able to call `tailwind-fmt`.
+## Usage
+
+Make sure you have [Tailwind CSS](https://tailwindcss.com/docs/installation) installed.
 
 ```sh
-cd tailwind-fmt
-npm link // to unlink: `npm unlink`
+tailwind-fmt
 ```
