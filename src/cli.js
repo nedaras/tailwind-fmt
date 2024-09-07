@@ -7,7 +7,6 @@ const fs = require('fs')
 const { glob } = require('glob') // dont like the warning it is throwing on install // todo: there is fs glob
 const { loadTailwindConfig, getConfigPath } = require('./tailwind/config.js');
 const { readUntilDelimiter, EOFError } = require('./reader.js');
-const { delimiter } = require('path');
 
 let context
 async function main() {
@@ -23,7 +22,7 @@ async function main() {
 
     const [ files, _tmp ] = await Promise.all([
       glob(context.tailwindConfig.content.files, { ignore: 'node_modules/**' }),
-      require('fs/promises').mkdtemp("tmp"), // this can err that already is an dir
+      fs.promises.mkdtemp("tmp"),
     ])
 
     tmp = _tmp
@@ -110,6 +109,11 @@ async function fmtFile(file, tmp) { // add like a check if we even needed to fmt
 
       if (queote) {
         queote = false
+
+        if (block === '') {
+          writer.write(delimiter);
+          return ["'", '"']
+        }
 
         // todo: mb add some white spaces in future under a flag
         if (block.includes('\n')) {

@@ -7,6 +7,7 @@ const input = [
   `<div class="text-gray-700 shadow-md p-3 border-gray-300 ml-4 h-24 flex border-2">`,
   `<div class='hover:opacity-75 opacity-50 hover:scale-150 scale-125'>`,
   `<div class="p-3 shadow-xl select2-dropdown">`,
+  `<div class="">`,
 ]
 
 const expected= [
@@ -14,6 +15,7 @@ const expected= [
   `<div class="ml-4 flex h-24 border-2 border-gray-300 p-3 text-gray-700 shadow-md">`,
   `<div class='scale-125 opacity-50 hover:scale-150 hover:opacity-75'>`,
   `<div class="select2-dropdown p-3 shadow-xl">`,
+  `<div class="">`,
 ]
 
 let tmp
