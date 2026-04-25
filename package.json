@@ -1,7 +1,7 @@
 {
   "name": "tailwind-fmt",
   "description": "A formatter for sorting Tailwind CSS classes.",
-  "version": "1.2.2",
+  "version": "1.3.0",
   "license": "MIT",
   "bin": {
     "tailwind-fmt": "src/cli.mjs"

@@ -6,11 +6,11 @@
   * @param {(reason?: any) => T} on_error
   */
 export function _try(f, on_error) {
-  try {
-    return f()
-  } catch (reason) {
-    return on_error(reason)
-  }
+    try {
+        return f()
+    } catch (reason) {
+        return on_error(reason)
+    }
 }
 
 /**
@@ -19,27 +19,27 @@ export function _try(f, on_error) {
   * @returns {(func: () => PromiseLike<T>) => Promise<T>}
   */
 export function limited(n) {
-  const queue = []
-  let amt = 0
+    const queue = []
+    let amt = 0
 
-  const next = () => {
-    if (queue.length == 0 || amt >= n) return
+    const next = () => {
+        if (queue.length == 0 || amt >= n) return
 
-    const { func, resolve, reject  } = queue.shift()
-    amt++
+        const { func, resolve, reject  } = queue.shift()
+        amt++
 
-    func().then(resolve, reject).finally(() => {
-      amt--
-      next()
-    })
-  }
+        func().then(resolve, reject).finally(() => {
+            amt--
+            next()
+        })
+    }
 
-  return (func) => {
-    const { promise, resolve, reject } = withResolvers()
-    queue.push({ func, resolve, reject })
-    next()
-    return promise
-  }
+    return (func) => {
+        const { promise, resolve, reject } = withResolvers()
+        queue.push({ func, resolve, reject })
+        next()
+        return promise
+    }
 }
 
 /**
@@ -47,13 +47,13 @@ export function limited(n) {
   * @returns {{ promise: Promise<T>, resolve: (val: T | PromiseLike<T>) => void, reject: (reason?: any) => void }}
   */
 export function withResolvers() {
-  let resolve
-  let reject
+    let resolve
+    let reject
 
-  const promise = new Promise((res, rej) => {
-    resolve = res
-    reject = rej
-  })
+    const promise = new Promise((res, rej) => {
+        resolve = res
+        reject = rej
+    })
 
-  return { promise, resolve, reject }
+    return { promise, resolve, reject }
 }
